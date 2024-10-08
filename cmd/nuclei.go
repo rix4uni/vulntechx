@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"bufio"
-    "encoding/json"
-    "fmt"
-    "io"
-    "os"
-    "os/exec"
-    "strings"
-    "sync"
+  "encoding/json"
+  "fmt"
+  "io"
+  "os"
+  "os/exec"
+  "strings"
+  "sync"
 
 	"github.com/spf13/cobra"
 )
