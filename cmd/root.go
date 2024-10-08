@@ -16,8 +16,20 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "vulntechx",
-	Short: "A brief description of your application",
-	Long:  `A longer description of your application.`,
+	Short: "find vulnerabilities based on tech stack using nuclei or ffuf",
+	Long:  `vulntechx finds vulnerabilities based on tech stack using nuclei tags or fuzzing with ffuf.
+
+Examples:
+  # Step 1, subdomain enumeration and subdomain probing and find tech stack
+  subfinder -d hackerone.com -all -duc -silent | httpx -duc -silent -nc -mc 200 -t 300 -td | unew httpx.txt
+
+  # Step 2, convert httpx output to json
+  cat httpx.txt | vulntechx httpxjson -o httpxjson-output.json
+
+  # Step 3, find vulnerabilities based on tech using nuclei
+  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -tags {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
+
+  # Step 4, find vulnerabilities based on tech using fuzzing with ffuf`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check if the version flag is set
 		if v, _ := cmd.Flags().GetBool("version"); v {
