@@ -84,66 +84,77 @@ Examples:
 	        wg.Add(1)
 	        semaphore <- struct{}{} // Acquire a semaphore
 	        go func(techData TechData) {
-	            defer wg.Done()
-	            defer func() { <-semaphore }() // Release the semaphore
+					    defer wg.Done()
+					    defer func() { <-semaphore }() // Release the semaphore
 
-	            // Process tech field
-	            var techs []string
-	            for _, t := range techData.Tech {
-	                parts := strings.SplitN(t, ":", 2)
-	                if len(parts) > 0 {
-	                    tech := strings.TrimSpace(parts[0])
-	                    // Ignore technologies with spaces
-	                    if !strings.Contains(tech, " ") {
-	                        techs = append(techs, tech)
-	                    }
-	                }
-	            }
-	            tech := strings.Join(techs, ",")
-	            tech = strings.ToLower(tech)
+					    // Process tech field
+					    var techs []string
+					    for _, t := range techData.Tech {
+					        parts := strings.SplitN(t, ":", 2)
+					        if len(parts) > 0 {
+					            tech := strings.TrimSpace(parts[0])
+					            // Ignore technologies with spaces
+					            if !strings.Contains(tech, " ") {
+					                techs = append(techs, tech)
+					            }
+					        }
+					    }
+					    tech := strings.ToLower(strings.Join(techs, ","))
 
-	            // Prepare the nuclei command
-	            cmdStr := strings.Replace(nucleiCmdStr, "{tech}", tech, -1)
-	            if process {
-	                fmt.Printf("Running Nuclei: %s [%s]\n", techData.Host, tech)
-	            }
+					    var cmdStr string
+					    if strings.Contains(nucleiCmdStr, "-tc") {
+					        // Modify to use the -tc format
+					        var conditions []string
+					        for _, t := range techs {
+					            conditions = append(conditions, fmt.Sprintf("contains(to_lower(name),'%s')", strings.ToLower(t)))
+					        }
+					        // cmdStr = strings.Replace(nucleiCmdStr, "{tech}", strings.Join(conditions, " || "), -1)
+					        cmdStr = strings.Replace(nucleiCmdStr, "{tech}", fmt.Sprintf("\"%s\"", strings.Join(conditions, " || ")), -1)
+					    } else if strings.Contains(nucleiCmdStr, "-tags") {
+					        // Use the -tags format as-is
+					        cmdStr = strings.Replace(nucleiCmdStr, "{tech}", tech, -1)
+					    }
 
-	            // Run the nuclei command
-	            cmd := exec.Command("sh", "-c", cmdStr)
-	            cmd.Stdin = strings.NewReader(techData.Host)
-	            stdoutPipe, _ := cmd.StdoutPipe()
-	            stderrPipe, _ := cmd.StderrPipe()
+					    if process {
+					        fmt.Printf("Running Nuclei: [echo \"%s\" | %s]\n", techData.Host, cmdStr)
+					    }
 
-	            if err := cmd.Start(); err != nil {
-	                if verbose {
-	                    fmt.Printf("Error starting nuclei command: %s\n", err)
-	                }
-	                return
-	            }
+					    // Run the nuclei command
+					    cmd := exec.Command("sh", "-c", cmdStr)
+					    cmd.Stdin = strings.NewReader(techData.Host)
+					    stdoutPipe, _ := cmd.StdoutPipe()
+					    stderrPipe, _ := cmd.StderrPipe()
 
-	            // Handle the output
-	            scanner := bufio.NewScanner(io.MultiReader(stdoutPipe, stderrPipe))
-	            for scanner.Scan() {
-	                line := scanner.Text()
-	                fmt.Println(line)
+					    if err := cmd.Start(); err != nil {
+					        if verbose {
+					            fmt.Printf("Error starting nuclei command: %s\n", err)
+					        }
+					        return
+					    }
 
-	                // Check if the line starts with three sets of square brackets
-	                parts := strings.Fields(line)
-	                if len(parts) >= 3 && strings.HasPrefix(parts[0], "[") && strings.HasPrefix(parts[1], "[") && strings.HasPrefix(parts[2], "[") {
-	                    if appendOutput != "" {
-	                        // Append the filtered output line to the specified file
-	                        if _, err := outputFile.WriteString(line + "\n"); err != nil && verbose {
-	                            fmt.Printf("Error writing to output file: %s\n", err)
-	                        }
-	                    }
-	                }
-	            }
+					    // Handle the output
+					    scanner := bufio.NewScanner(io.MultiReader(stdoutPipe, stderrPipe))
+					    for scanner.Scan() {
+					        line := scanner.Text()
+					        fmt.Println(line)
 
-	            if err := cmd.Wait(); err != nil && verbose {
-	                fmt.Printf("Error waiting for nuclei command: %s\n", err)
-	            }
+					        // Check if the line starts with three sets of square brackets
+					        parts := strings.Fields(line)
+					        if len(parts) >= 3 && strings.HasPrefix(parts[0], "[") && strings.HasPrefix(parts[1], "[") && strings.HasPrefix(parts[2], "[") {
+					            if appendOutput != "" {
+					                // Append the filtered output line to the specified file
+					                if _, err := outputFile.WriteString(line + "\n"); err != nil && verbose {
+					                    fmt.Printf("Error writing to output file: %s\n", err)
+					                }
+					            }
+					        }
+					    }
 
-	        }(techData)
+					    if err := cmd.Wait(); err != nil && verbose {
+					        fmt.Printf("Error waiting for nuclei command: %s\n", err)
+					    }
+
+					}(techData)
 	    }
 
 	    wg.Wait() // Wait for all goroutines to finish
