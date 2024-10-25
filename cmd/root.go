@@ -3,21 +3,22 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
-	"net/http"
-	"io/ioutil"
 	"strings"
-	"github.com/spf13/cobra"
+
 	"github.com/rix4uni/vulntechx/banner"
+	"github.com/spf13/cobra"
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "vulntechx",
 	Short: "find vulnerabilities based on tech stack using nuclei or ffuf",
-	Long:  `vulntechx finds vulnerabilities based on tech stack using nuclei tags or fuzzing with ffuf.
+	Long: `vulntechx finds vulnerabilities based on tech stack using nuclei tags or fuzzing with ffuf.
 
 Examples:
   # Step 1, subdomain enumeration and subdomain probing and find tech stack
@@ -27,9 +28,13 @@ Examples:
   cat httpx.txt | vulntechx httpxjson -o httpxjson-output.json
 
   # Step 3, find vulnerabilities based on tech using nuclei
-  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -tags {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
+  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/cent-configuration/cent-nuclei-templates -tags {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
 
-  # Step 4, find vulnerabilities based on tech using fuzzing with ffuf`,
+  # or
+  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/cent-configuration/cent-nuclei-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
+
+  # Step 4, find vulnerabilities based on tech using fuzzing with ffuf
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check if the version flag is set
 		if v, _ := cmd.Flags().GetBool("version"); v {
