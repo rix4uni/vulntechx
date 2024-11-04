@@ -28,10 +28,10 @@ Examples:
   cat httpx.txt | vulntechx httpxjson -o httpxjson-output.json
 
   # Step 3, find vulnerabilities based on tech using nuclei
-  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/cent-configuration/cent-nuclei-templates -tags {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
+  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/nucleihub-templates -tags {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
 
   # or
-  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/cent-configuration/cent-nuclei-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
+  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/nucleihub-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
 
   # Step 4, find vulnerabilities based on tech using fuzzing with ffuf
 `,

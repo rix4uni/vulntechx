@@ -27,9 +27,13 @@ var nucleiCmd = &cobra.Command{
 You can customize the Nuclei command using a template, and control the level of parallelism with the provided flags.
 
 Examples:
-  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/cent-configuration/cent-nuclei-templates -tags {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
+  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/nucleihub-templates -tags {tech} -es unknown,info,low" --parallel 10 --process --append-output nuclei-output.txt
+
   or
-  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/cent-configuration/cent-nuclei-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
+  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/nucleihub-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --append-output nuclei-output.txt
+
+  or
+  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/nucleihub-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --exclude-tech "hsts,bootstrap" --append-output nuclei-output.txt
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		fileName, _ := cmd.Flags().GetString("file")
@@ -38,10 +42,16 @@ Examples:
 		process, _ := cmd.Flags().GetBool("process")
 		parallel, _ := cmd.Flags().GetInt("parallel")
 		appendOutput, _ := cmd.Flags().GetString("append")
+		excludeTech, _ := cmd.Flags().GetString("exclude-tech")
 
 		if fileName == "" {
-			fmt.Println("Usage: nucleitechx -file <file> -nucleicmd <nuclei command> -parallel <number of parallel processes> -append <output file>")
+			fmt.Println("Usage: nucleitechx -file <file> -nucleicmd <nuclei command> -parallel <number of parallel processes> --append-output <output file>")
 			os.Exit(1)
+		}
+
+		excludeList := strings.Split(excludeTech, ",")
+		for i := range excludeList {
+			excludeList[i] = strings.TrimSpace(strings.ToLower(excludeList[i]))
 		}
 
 		file, err := os.Open(fileName)
@@ -51,7 +61,7 @@ Examples:
 		}
 		defer file.Close()
 
-		// Open the output file for appending if the -append flag is specified
+		// Open the output file for appending if the --append-output flag is specified
 		var outputFile *os.File
 		if appendOutput != "" {
 			outputFile, err = os.OpenFile(appendOutput, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -96,7 +106,7 @@ Examples:
 					if len(parts) > 0 {
 						tech := strings.TrimSpace(parts[0])
 						// Ignore technologies with spaces
-						if !strings.Contains(tech, " ") {
+						if !strings.Contains(tech, " ") && !contains(excludeList, strings.ToLower(tech)) {
 							techs = append(techs, tech)
 						}
 					}
@@ -117,7 +127,6 @@ Examples:
 					for _, t := range techs {
 						conditions = append(conditions, fmt.Sprintf("contains(to_lower(name),'%s')", strings.ToLower(t)))
 					}
-					// cmdStr = strings.Replace(nucleiCmdStr, "{tech}", strings.Join(conditions, " || "), -1)
 					cmdStr = strings.Replace(nucleiCmdStr, "{tech}", fmt.Sprintf("\"%s\"", strings.Join(conditions, " || ")), -1)
 				} else if strings.Contains(nucleiCmdStr, "-tags") {
 					// Use the -tags format as-is
@@ -170,6 +179,16 @@ Examples:
 	},
 }
 
+// Utility function to check if a tech is in the exclusion list
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
 func init() {
 	rootCmd.AddCommand(nucleiCmd)
 
@@ -178,5 +197,6 @@ func init() {
 	nucleiCmd.Flags().Bool("verbose", false, "Enable verbose output for debugging purposes.")
 	nucleiCmd.Flags().Bool("process", false, "Show which URL is running on Nuclei.")
 	nucleiCmd.Flags().Int("parallel", 50, "Number of parallel processes")
-	nucleiCmd.Flags().String("append", "", "File path to append output")
+	nucleiCmd.Flags().String("append-output", "", "File path to append output")
+	nucleiCmd.Flags().String("exclude-tech", "", "Comma-separated list of technologies to exclude")
 }
