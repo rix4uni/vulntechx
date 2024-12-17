@@ -27,25 +27,25 @@ var nucleiCmd = &cobra.Command{
 You can customize the Nuclei command using a template, and control the level of parallelism with the provided flags.
 
 Examples:
-  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/nucleihub-templates -tags {tech} -es unknown,info,low" --parallel 10 --process --append-output nuclei-output.txt
+  vulntechx nuclei --file httpxjson-output.json --cmd "nuclei -duc -nc -t ~/nucleihub-templates -tags {tech} -es unknown,info,low" --parallel 10 --process --append-output nuclei-output.txt
 
   or
-  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/nucleihub-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --append-output nuclei-output.txt
+  vulntechx nuclei --file httpxjson-output.json --cmd "nuclei -duc -nc -t ~/nucleihub-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --append-output nuclei-output.txt
 
   or
-  vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/nucleihub-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --exclude-tech "hsts,bootstrap" --append-output nuclei-output.txt
+  vulntechx nuclei --file httpxjson-output.json --cmd "nuclei -duc -nc -t ~/nucleihub-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --exclude-tech "hsts,bootstrap" --append-output nuclei-output.txt
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		fileName, _ := cmd.Flags().GetString("file")
-		nucleiCmdStr, _ := cmd.Flags().GetString("nucleicmd")
+		nucleiCmdStr, _ := cmd.Flags().GetString("cmd")
 		verbose, _ := cmd.Flags().GetBool("verbose")
 		process, _ := cmd.Flags().GetBool("process")
 		parallel, _ := cmd.Flags().GetInt("parallel")
-		appendOutput, _ := cmd.Flags().GetString("append")
+		appendOutput, _ := cmd.Flags().GetString("append-output")
 		excludeTech, _ := cmd.Flags().GetString("exclude-tech")
 
 		if fileName == "" {
-			fmt.Println("Usage: nucleitechx -file <file> -nucleicmd <nuclei command> -parallel <number of parallel processes> --append-output <output file>")
+			fmt.Println("Usage: nucleitechx -file <file> -cmd <nuclei command> -parallel <number of parallel processes> --append-output <output file>")
 			os.Exit(1)
 		}
 
@@ -193,7 +193,7 @@ func init() {
 	rootCmd.AddCommand(nucleiCmd)
 
 	nucleiCmd.Flags().String("file", "", "Path to the JSON file")
-	nucleiCmd.Flags().String("nucleicmd", "", "The nuclei command template")
+	nucleiCmd.Flags().String("cmd", "", "The nuclei command template")
 	nucleiCmd.Flags().Bool("verbose", false, "Enable verbose output for debugging purposes.")
 	nucleiCmd.Flags().Bool("process", false, "Show which URL is running on Nuclei.")
 	nucleiCmd.Flags().Int("parallel", 50, "Number of parallel processes")

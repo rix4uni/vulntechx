@@ -9,9 +9,9 @@ go install github.com/rix4uni/vulntechx@latest
 
 ## Download prebuilt binaries
 ```
-wget https://github.com/rix4uni/vulntechx/releases/download/v0.0.4/vulntechx-linux-amd64-0.0.4.tgz
-tar -xvzf vulntechx-linux-amd64-0.0.4.tgz
-rm -rf vulntechx-linux-amd64-0.0.4.tgz
+wget https://github.com/rix4uni/vulntechx/releases/download/v0.0.5/vulntechx-linux-amd64-0.0.5.tgz
+tar -xvzf vulntechx-linux-amd64-0.0.5.tgz
+rm -rf vulntechx-linux-amd64-0.0.5.tgz
 mv vulntechx ~/go/bin/vulntechx
 ```
 Or download [binary release](https://github.com/rix4uni/vulntechx/releases) for your platform.
@@ -30,7 +30,7 @@ cd vulntechx; go install
 | |/ // /_/ // // / / // /_ /  __// /__ / / / /_>  <
 |___/ \__,_//_//_/ /_/ \__/ \___/ \___//_/ /_//_/|_|
 
-                            Current vulntechx version v0.0.4
+                            Current vulntechx version v0.0.5
 
 A longer description of your application.
 
@@ -62,13 +62,13 @@ subfinder -d hackerone.com -all -duc -silent | httpx -duc -silent -nc -mc 200 -t
 cat httpx.txt | vulntechx httpxjson -o httpxjson-output.json
 
 # Step 3, find vulnerabilities based on tech using nuclei
-vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/nucleihub-templates -tags {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
+vulntechx nuclei --file httpxjson-output.json --cmd "nuclei -duc -nc -t ~/nucleihub-templates -tags {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
 
 # or
-vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/nucleihub-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
+vulntechx nuclei --file httpxjson-output.json --cmd "nuclei -duc -nc -t ~/nucleihub-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --append nuclei-output.txt
 
 # or
-vulntechx nuclei --file httpxjson-output.json --nucleicmd "nuclei -duc -nc -t ~/nucleihub-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --exclude-tech "hsts,bootstrap" --append nuclei-output.txt
+vulntechx nuclei --file httpxjson-output.json --cmd "nuclei -duc -nc -t ~/nucleihub-templates -tc {tech} -es unknown,info,low" --parallel 10 --process --exclude-tech "hsts,bootstrap" --append nuclei-output.txt
 
 # Step 4, find vulnerabilities based on tech using fuzzing with ffuf
 ```
